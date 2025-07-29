@@ -1,5 +1,3 @@
-# backend/app/filters.py
-
 from fastapi import APIRouter
 from .database import collection
 
