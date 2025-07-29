@@ -1,21 +1,14 @@
-from fastapi import FastAPI
-from pymongo import MongoClient
-from dotenv import load_dotenv
-import os
+# backend/app/main.py
 
-load_dotenv()
+from fastapi import FastAPI
+from .filters import router as filters_router
+from .data import router as data_router
 
 app = FastAPI()
 
-client = MongoClient(os.getenv("MONGO_URI"))
-db = client[os.getenv("MONGO_DB")]
-collection = db[os.getenv("MONGO_COLLECTION")]
+app.include_router(filters_router, prefix="/api")
+app.include_router(data_router, prefix="/api")
 
 @app.get("/")
 def root():
-    return {"message": "API is live"}
-
-@app.get("/api/data")
-def get_data():
-    results = collection.find({}, {"_id": 0})  # Exclude MongoDB internal ID
-    return list(results)
+    return {"msg": "API is live"}
