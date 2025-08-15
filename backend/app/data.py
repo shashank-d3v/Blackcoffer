@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException
 from typing import Optional
+from pymongo.errors import PyMongoError
 from .database import collection
 
 router = APIRouter()
@@ -31,5 +32,8 @@ def get_filtered_data(
         if value:
             filters[key] = value
 
-    results = collection.find(filters, {"_id": 0})
-    return list(results)
+    try:
+        results = collection.find(filters, {"_id": 0})
+        return list(results)
+    except PyMongoError as exc:
+        raise HTTPException(status_code=503, detail="Database query failed") from exc
