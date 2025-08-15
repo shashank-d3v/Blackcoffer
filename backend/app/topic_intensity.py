@@ -3,7 +3,9 @@
 from collections import defaultdict
 from typing import Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+from pymongo.errors import PyMongoError
+
 
 from .database import collection
 
@@ -38,15 +40,18 @@ def topic_intensity(
         if value and value != "All":
             filters[key] = value
 
-    cursor = collection.find(filters, {"_id": 0, "topic": 1, "intensity": 1})
-    topic_totals = defaultdict(int)
+    try:
+        cursor = collection.find(filters, {"_id": 0, "topic": 1, "intensity": 1})
+        topic_totals = defaultdict(int)
 
-    for item in cursor:
-        key = item.get("topic", "").strip()
-        topic_totals[key] += item.get("intensity", 0)
+        for item in cursor:
+            key = item.get("topic", "").strip()
+            topic_totals[key] += item.get("intensity", 0)
 
-    result = [
-        {"topic": k, "intensity": v} for k, v in topic_totals.items() if k
-    ]
-    result.sort(key=lambda x: x["intensity"], reverse=True)
-    return result
+        result = [
+            {"topic": k, "intensity": v} for k, v in topic_totals.items() if k
+        ]
+        result.sort(key=lambda x: x["intensity"], reverse=True)
+        return result
+    except PyMongoError as exc:
+        raise HTTPException(status_code=503, detail="Database query failed") from exc
