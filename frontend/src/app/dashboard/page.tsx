@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import FilterPanel from '../components/FilterPanel';
 import ChartContainer from '../components/ChartContainer';
+import TopicIntensityChart from '../components/TopicIntensityChart';
 import API from '../utils/api';
 
 type DataPoint = {
@@ -53,6 +54,8 @@ export default function Dashboard() {
         <FilterPanel filters={filters} setFilters={setFilters} />
       </section>
 
+      <TopicIntensityChart filters={filters} />
+
       <section className="bg-gray-900 p-4 rounded shadow-md">
         <h2 className="text-xl font-semibold mb-2">
           Showing {data.length} entries
@@ -61,7 +64,7 @@ export default function Dashboard() {
           <pre>{JSON.stringify(data.slice(0, 5), null, 2)}</pre>
         </div>
       </section>
-      <ChartContainer data={data} />  
+      <ChartContainer data={data} />
     </main>
   );
 }

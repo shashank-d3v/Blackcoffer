@@ -1,7 +1,11 @@
-from fastapi import APIRouter, Query
-from typing import Optional, List
-from .database import collection
+"""Endpoint for aggregating topic intensity."""
+
 from collections import defaultdict
+from typing import Optional
+
+from fastapi import APIRouter
+
+from .database import collection
 
 router = APIRouter()
 
@@ -17,40 +21,32 @@ def topic_intensity(
     country: Optional[str] = None,
     city: Optional[str] = None,
 ):
-    query = {}
+    """Return total intensity per topic based on provided filters."""
 
-    # Build filter dynamically
-    if end_year and end_year != "All":
-        query["end_year"] = end_year
-    if topic and topic != "All":
-        query["topic"] = topic
-    if sector and sector != "All":
-        query["sector"] = sector
-    if region and region != "All":
-        query["region"] = region
-    if pestle and pestle != "All":
-        query["pestle"] = pestle
-    if source and source != "All":
-        query["source"] = source
-    if swot and swot != "All":
-        query["swot"] = swot
-    if country and country != "All":
-        query["country"] = country
-    if city and city != "All":
-        query["city"] = city
+    filters = {}
+    for key, value in {
+        "end_year": end_year,
+        "topic": topic,
+        "sector": sector,
+        "region": region,
+        "pestle": pestle,
+        "source": source,
+        "swot": swot,
+        "country": country,
+        "city": city,
+    }.items():
+        if value and value != "All":
+            filters[key] = value
 
-    data = list(collection.find(query))
-    topic_intensity_map = defaultdict(int)
+    cursor = collection.find(filters, {"_id": 0, "topic": 1, "intensity": 1})
+    topic_totals = defaultdict(int)
 
-    for item in data:
-        topic = item.get("topic", "").strip()
-        intensity = item.get("intensity", 0)
+    for item in cursor:
+        key = item.get("topic", "").strip()
+        topic_totals[key] += item.get("intensity", 0)
 
-        if topic and isinstance(intensity, (int, float)):
-            topic_intensity_map[topic] += intensity
-
-    # Convert to list of dicts for frontend charting
-    result = [{"topic": k, "intensity": v} for k, v in topic_intensity_map.items()]
+    result = [
+        {"topic": k, "intensity": v} for k, v in topic_totals.items() if k
+    ]
     result.sort(key=lambda x: x["intensity"], reverse=True)
-
     return result
