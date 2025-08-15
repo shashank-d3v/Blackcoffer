@@ -6,6 +6,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pymongo.errors import PyMongoError
 
+
 from .database import collection
 
 router = APIRouter()
